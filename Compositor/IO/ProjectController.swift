@@ -50,7 +50,7 @@ final class ProjectController {
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false
         panel.title = "Export PNG"
-        panel.nameFieldStringValue = (session.projectURL?.deletingPathExtension().lastPathComponent ?? "Untitled") + ".png"
+        panel.nameFieldStringValue = (session.projectURL?.deletingPathExtension().lastPathComponent ?? UICopy.string("Untitled")) + ".png"
         let response: NSApplication.ModalResponse
         if let window { response = await panel.beginSheetModal(for: window) }
         else { response = await panel.begin() }
@@ -182,7 +182,7 @@ final class ProjectController {
             panel.canCreateDirectories = true
             panel.isExtensionHidden = false
             panel.title = "Export JPEG"
-            panel.nameFieldStringValue = (session.projectURL?.deletingPathExtension().lastPathComponent ?? "Untitled") + ".jpg"
+            panel.nameFieldStringValue = (session.projectURL?.deletingPathExtension().lastPathComponent ?? UICopy.string("Untitled")) + ".jpg"
             guard await panel.beginSheetModal(for: window) == .OK, let url = panel.url else { return }
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
@@ -206,7 +206,7 @@ final class ProjectController {
             panel.allowedContentTypes = [.compositorProject]
             panel.canCreateDirectories = true
             panel.isExtensionHidden = false
-            panel.nameFieldStringValue = session.projectURL?.lastPathComponent ?? "Untitled.comp"
+            panel.nameFieldStringValue = session.projectURL?.lastPathComponent ?? UICopy.string("Untitled") + ".comp"
             panel.title = asNew ? "Save Project As" : "Save Project"
             let response: NSApplication.ModalResponse
             if let window { response = await panel.beginSheetModal(for: window) }
@@ -329,11 +329,11 @@ final class ProjectController {
         await finishWriting()
         guard session.isModified, session.document != nil else { return true }
         let alert = NSAlert()
-        alert.messageText = "Save changes to \(session.projectURL?.lastPathComponent ?? "Untitled")?"
-        alert.informativeText = "Your changes will be lost if you don’t save them."
-        alert.addButton(withTitle: "Save")
-        alert.addButton(withTitle: "Cancel")
-        let dontSaveButton = alert.addButton(withTitle: "Don’t Save")
+        alert.messageText = String(format: UICopy.string("Save changes to %@?"), session.projectURL?.lastPathComponent ?? UICopy.string("Untitled"))
+        alert.informativeText = UICopy.string("Your changes will be lost if you don’t save them.")
+        alert.addButton(withTitle: UICopy.string("Save"))
+        alert.addButton(withTitle: UICopy.string("Cancel"))
+        let dontSaveButton = alert.addButton(withTitle: UICopy.string("Don’t Save"))
         dontSaveButton.hasDestructiveAction = true
         let response = await show(alert)
         if response == .alertFirstButtonReturn { return await saveCurrent() }
@@ -343,9 +343,9 @@ final class ProjectController {
     private func showError(_ title: String, error: Error) async {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = title
+        alert.messageText = UICopy.string(title)
         alert.informativeText = error.localizedDescription
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: UICopy.string("OK"))
         _ = await show(alert)
     }
 

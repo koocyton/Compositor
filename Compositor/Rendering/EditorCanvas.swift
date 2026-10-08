@@ -2870,17 +2870,19 @@ extension CanvasView {
                                colorSpace: placement.renderer.space) ?? .black
             }
             guard fill.colors.count == 2 else { return nil }
+            // These are generators: they have no `inputImage`. `applyingFilter` always sets that key, and on
+            // macOS 15 Core Image throws, which AppKit turns into a crash while the canvas is drawing.
             let shading: CIImage
             switch fill.shape {
             case .linear:
-                shading = CIImage.empty().applyingFilter("CILinearGradient", parameters: [
+                shading = CIFilter(name: "CILinearGradient", parameters: [
                     "inputPoint0": CIVector(cgPoint: fill.start), "inputPoint1": CIVector(cgPoint: fill.end),
-                    "inputColor0": color(fill.colors[0]), "inputColor1": color(fill.colors[1])])
+                    "inputColor0": color(fill.colors[0]), "inputColor1": color(fill.colors[1])])?.outputImage ?? CIImage.empty()
             case .radial:
-                shading = CIImage.empty().applyingFilter("CIRadialGradient", parameters: [
+                shading = CIFilter(name: "CIRadialGradient", parameters: [
                     kCIInputCenterKey: CIVector(cgPoint: fill.start), "inputRadius0": 0,
                     "inputRadius1": hypot(fill.end.x - fill.start.x, fill.end.y - fill.start.y),
-                    "inputColor0": color(fill.colors[0]), "inputColor1": color(fill.colors[1])])
+                    "inputColor0": color(fill.colors[0]), "inputColor1": color(fill.colors[1])])?.outputImage ?? CIImage.empty()
             }
             let toGrid = stroke.pixelToDocument.inverted()
             var coverage = CIImage(color: .white).cropped(to: stroke.canvas)

@@ -9,10 +9,10 @@ nonisolated enum NewCanvasUnit: String, CaseIterable, Sendable {
     /// The unit written out, for the summary line's pill.
     var name: String {
         switch self {
-        case .pixels: "Pixels"
-        case .inches: "Inches"
-        case .centimeters: "Centimeters"
-        case .millimeters: "Millimeters"
+        case .pixels: UICopy.string("Pixels")
+        case .inches: UICopy.string("Inches")
+        case .centimeters: UICopy.string("Centimeters")
+        case .millimeters: UICopy.string("Millimeters")
         }
     }
     /// The next unit, for the pill: px → in → cm → mm → px.
@@ -44,7 +44,13 @@ nonisolated enum NewCanvasUnit: String, CaseIterable, Sendable {
 /// What a new canvas starts as: see-through, or a Background layer of white or black.
 nonisolated enum NewCanvasBackground: String, CaseIterable, Sendable {
     case transparent, white, black
-    var title: String { "\(rawValue.capitalized) canvas" }
+    var title: String {
+        switch self {
+        case .transparent: UICopy.string("Transparent canvas")
+        case .white: UICopy.string("White canvas")
+        case .black: UICopy.string("Black canvas")
+        }
+    }
     var next: NewCanvasBackground { Self.allCases[(Self.allCases.firstIndex(of: self)! + 1) % Self.allCases.count] }
     var color: CGColor? {
         switch self {
@@ -74,7 +80,7 @@ struct NewCanvasSheet: View {
     private var valid: Bool { pixelWidth != nil && pixelHeight != nil }
     private var resolutionHelp: String {
         let size = unit != .pixels ? pixelWidth.flatMap { w in pixelHeight.map { h in " · \(Int(resolution)) DPI: \(w) × \(h) pixels" } } : nil
-        return "Resolution: 72 for screens, 300 for print. Click to switch." + (size ?? "")
+        return UICopy.string("Resolution: 72 for screens, 300 for print. Click to switch.") + (size ?? "")
     }
     /// Shows the sizes in another unit, the same canvas written differently.
     private func switchUnit(to new: NewCanvasUnit) {
@@ -128,12 +134,12 @@ struct NewCanvasSheet: View {
             }
             // The settings are pills, each changed the same way: click to step to the next choice.
             HStack(spacing: 4) {
-                CyclePill(background.title, help: "Start see-through, or with a white or black Background layer. Click to switch.") {
+                CyclePill(background.title, help: UICopy.string("Start see-through, or with a white or black Background layer. Click to switch.")) {
                     background = background.next
                 }
                 .accessibilityIdentifier("canvasBackground")
                 Text("·")
-                CyclePill(unit.name, help: "Units: pixels, inches, centimeters or millimeters. Click to switch.") {
+                CyclePill(unit.name, help: UICopy.string("Units: pixels, inches, centimeters or millimeters. Click to switch.")) {
                     switchUnit(to: unit.next)
                 }
                 .accessibilityIdentifier("canvasUnit")
@@ -207,7 +213,7 @@ struct NewCanvasSheet: View {
                 TextField(title, text: text).textFieldStyle(.plain)
                     .focused($focusedField, equals: field)
                     .accessibilityIdentifier(title.lowercased() + "Input")
-                Text(unit.rawValue).foregroundStyle(.secondary)
+                UICopy.text(unit.rawValue).foregroundStyle(.secondary)
             }
             .padding(12).background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 7))
         }

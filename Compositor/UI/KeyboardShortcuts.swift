@@ -42,7 +42,7 @@ struct ShortcutChord: Codable, Equatable, Hashable {
         return flags
     }
     var label: String {
-        let special = ["\u{7f}": "Delete", "\r": "Return", "\u{1b}": "Esc", "\t": "Tab", " ": "Space",
+        let special = ["\u{7f}": UICopy.string("Delete"), "\r": UICopy.string("Return"), "\u{1b}": UICopy.string("Esc"), "\t": UICopy.string("Tab"), " ": UICopy.string("Space"),
                        "\u{f702}": "←", "\u{f703}": "→", "\u{f701}": "↓", "\u{f700}": "↑"]
         return (modifiers & 4 != 0 ? "⌃" : "") + (modifiers & 2 != 0 ? "⌥" : "")
             + (modifiers & 8 != 0 ? "⇧" : "") + (modifiers & 1 != 0 ? "⌘" : "")
@@ -167,15 +167,17 @@ final class ShortcutSettings {
         var assigned: [ShortcutChord: String] = [:]
         for definition in ShortcutDefinition.all {
             let chord = values[definition.id] ?? definition.original
-            guard chord.key.count == 1, (0...15).contains(chord.modifiers) else { return "Choose a single key with optional modifiers." }
+            guard chord.key.count == 1, (0...15).contains(chord.modifiers) else { return UICopy.string("Choose a single key with optional modifiers.") }
             if definition.group == "Text Editing", chord.modifiers & 7 == 0 {
-                return "Text-editing shortcuts need Command, Option, or Control so they do not replace normal typing."
+                return UICopy.string("Text-editing shortcuts need Command, Option, or Control so they do not replace normal typing.")
             }
             if [ShortcutChord("q", 1), ShortcutChord(",", 1), ShortcutChord("m", 3)].contains(chord) {
-                return "\(chord.label) is reserved by macOS."
+                return String(format: UICopy.string("%@ is reserved by macOS."), chord.label)
             }
-            if let other = assigned[chord] { return "\(chord.label) is assigned to both \(other) and \(definition.title)." }
-            assigned[chord] = definition.title
+            if let other = assigned[chord] {
+                return String(format: UICopy.string("%@ is assigned to both %@ and %@."), chord.label, other, UICopy.string(definition.title))
+            }
+            assigned[chord] = UICopy.string(definition.title)
         }
         return nil
     }
@@ -240,10 +242,13 @@ private struct KeyboardShortcutsSheet: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 6) {
                     ForEach(["Menus", "Canvas & Layers", "Text Editing"], id: \.self) { group in
-                        Text(group).font(.headline).padding(.top, 8)
-                        ForEach(ShortcutDefinition.all.filter { $0.group == group && (search.isEmpty || $0.title.localizedCaseInsensitiveContains(search)) }) { definition in
+                        UICopy.text(group).font(.headline).padding(.top, 8)
+                        ForEach(ShortcutDefinition.all.filter { definition in
+                            let name = UICopy.string(definition.title)
+                            return definition.group == group && (search.isEmpty || name.localizedCaseInsensitiveContains(search) || definition.title.localizedCaseInsensitiveContains(search))
+                        }) { definition in
                             HStack {
-                                Text(definition.title)
+                                UICopy.text(definition.title)
                                 Spacer()
                                 ShortcutRecorder(chord: draft[definition.id] ?? definition.original,
                                     recording: recording == definition.id,
